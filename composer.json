@@ -1,4 +1,13 @@
 {
+    "name": "bonwe/bonwenium",
+    "description": "基于改装的webdriver,selenium思想，采用模块化封装的php自动化测试框架。\n开发者只需要掌握基础前端知识，基础php知识，\n就能通过精简的开发实现复杂自动化测试，大幅度提升开发效率，降低自动化测试门槛。",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "weibangwei",
+            "email": "122783533@qq.com"
+        }
+    ],
     "require": {
         "bonwe/webdriver": "v1.0.1",
         "monolog/monolog": "^1.24"
