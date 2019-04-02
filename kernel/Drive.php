@@ -1,9 +1,7 @@
 <?php
-
 namespace Kernel;
 
 
-use App\Controller;
 use Bonwe\WebDriver\Remote\RemoteWebDriver;
 
 class Drive

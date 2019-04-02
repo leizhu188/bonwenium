@@ -49,7 +49,7 @@ class Controller
             foreach ($step as $type=>$value){
                 switch ($type){
                     case 'sleep':
-                        sleep($value);break;
+                        sleep((int)$value);break;
                     case 'usleep':
                         usleep($value);break;
                     case 'must_step':
@@ -70,7 +70,7 @@ class Controller
     /**
      * @param $step
      * 无参数： 例 User@test
-     * 有参数，仅能传一个参数，用json格式： 例 User@test@{'phone'=>18810680772}
+     * 有参数，仅能传一个参数，用json格式： 例 User@test@{'phone'=>18888888888}
      */
     protected function doFunction($step){
         $arr = explode('@',$step);
@@ -156,6 +156,10 @@ class Controller
      * 例： >tag:a
      */
     protected function analysisElements_next($elements,$str){
+        if (empty($str)){
+            return $elements;
+        }
+
         $k = explode(':',$str)[0];
         $v = explode(':',$str)[1];
         $return = [];
