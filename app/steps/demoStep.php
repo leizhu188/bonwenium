@@ -1,6 +1,7 @@
 <?php
 /*
- *
+ * 流程线：
+ * 一次测试流程的分发口
  */
 return [
     app('actions.demoAction.demo'),

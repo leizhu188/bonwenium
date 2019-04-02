@@ -9,15 +9,17 @@
 namespace App\Functions;
 
 
+use Bonwe\WebDriver\WebDriverBy;
+
 class DemoFunction extends BaseFunction
 {
 
     /*
-     * 请求发送验证码接口并获取验证码，填入方块中
+     * 继承自入口Controller。自定义方法满足非常规操作
      */
     public function demo(){
         var_dump("***********   success   ***********");
-//        $this->driver->findElement()->click();
+//        $this->driver->findElement(WebDriverBy::id('su'))->click();
     }
 
 }
