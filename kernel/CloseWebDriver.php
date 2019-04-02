@@ -13,7 +13,7 @@ class CloseWebDriver{
 
     public static function doClose(RemoteWebDriver $driver)
     {
-//        $driver->close();
+        $driver->close();
     }
 
 }
