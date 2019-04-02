@@ -1,0 +1,27 @@
+<?php
+
+namespace Kernel;
+
+
+use App\Controller;
+use Bonwe\WebDriver\Remote\RemoteWebDriver;
+
+class Drive
+{
+    private $driver;
+
+    public function __construct(RemoteWebDriver $driver)
+    {
+        $this->driver = $driver;
+    }
+
+    public function handle()
+    {
+        $enterUrl = config('app.index_url');
+
+        $stepDriver = $this->driver->get($enterUrl);
+
+        return $stepDriver;
+    }
+
+}

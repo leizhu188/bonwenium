@@ -1,0 +1,20 @@
+{
+    "require": {
+        "bonwe/webdriver": "dev-master",
+        "monolog/monolog": "^1.24"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Kernel\\": "kernel/"
+        },
+        "files": [
+            "global/app.php",
+            "global/step.php",
+            "global/config.php",
+            "global/monolog.php",
+            "global/app_path.php",
+            "global/steps_path.php"
+        ]
+    }
+}
