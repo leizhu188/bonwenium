@@ -10,9 +10,16 @@
  */
 return[
     [
-        'must_step'=>'id:kw>>>write:bonwenium',
+        'must_step'=>"id:kw>>>write:bonwenium",
     ],
     [
         'must_step'=>'id:su>>>click',
+        'until'=>'id:su>>>disappear',
+        'asserts'=>[
+            'tag:a>text:图片>>>exist',
+            'tag:a>text:影音>>>exist',
+            'tag:a>text:包子>>>no_exist',
+            'tag:a>text:地图>>>no_exist'
+        ]
     ]
 ];
