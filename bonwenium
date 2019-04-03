@@ -5,4 +5,4 @@ require __DIR__.'/vendor/autoload.php';
 
 date_default_timezone_set("PRC");
 
-(new \Kernel\Selenium())->handle();
+(new \Kernel\Bonwenium())->handle();

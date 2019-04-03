@@ -11,7 +11,7 @@ namespace Kernel;
 
 use App\Controller;
 
-class Selenium
+class Bonwenium
 {
     private $argv = [];
     public function __construct($argv = null)
