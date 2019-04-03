@@ -266,7 +266,7 @@ class Controller
                 break;
         }
 
-        self::saveLog('until','ok',$until,$aSteps[count($aSteps)-1]['str'],$aSteps[count($aSteps)-1]['str']);
+        self::saveLog('until','ok',$until,'','');
     }
 
     /*
@@ -294,7 +294,7 @@ class Controller
         $message = trim(trim($message),'<!---->');
 
         if ($rightMessage && $message == $rightMessage){
-            self::saveLog('check_msg','ok',$rightMessage,$rightMessage,'');
+            self::saveLog('check_msg','ok',$rightMessage,'','');
             return true;
         }
 
@@ -357,8 +357,8 @@ class Controller
                 monolog(
                     str_pad($stepType,10," ")
                     .str_pad($status,5," ")
-                    .str_pad($expect,20," ")
-                    .str_pad($result,20," ")
+                    .'expect:'.str_pad($expect,20," ")
+                    .'result:'.str_pad($result,20," ")
                     .$stepStr
                 );
                 break;
