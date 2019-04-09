@@ -14,7 +14,7 @@ return[
     ],
     [
         'must_step'=>'id:su>>>click',
-        'until'=>'id:su>>>disappear',
+        'until'=>'id:su>>>appear',
         'asserts'=>[
             'tag:a>text:图片>>>exist',
             'tag:a>text:影音>>>exist',
