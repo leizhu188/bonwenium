@@ -1,8 +1,6 @@
 <?php
-use \Monolog\Logger;
-use \Monolog\Handler\StreamHandler;
 /**
- * @author weibangwei
+ * @author bonwe
  * 自定义全局方法
  */
 if (!function_exists('app_path')) {

@@ -1,6 +1,6 @@
 <?php
 /**
- * @author weibangwei
+ * @author bonwe
  * 自定义全局方法
  */
 if (!function_exists('app')) {
