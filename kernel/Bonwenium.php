@@ -59,14 +59,12 @@ class Bonwenium
             }
         }
 
-        self::echoDriverBegin();
         $driver = (new CreateWebDriver())->drive();
         foreach ($argvs as $step){
             self::handleStep($driver,$step);
         }
 
         CloseWebDriver::doClose($driver);
-        self::echoDriverClose();
     }
 
     public function handle_cgi(){
@@ -86,14 +84,12 @@ class Bonwenium
             }
         }
 
-        self::echoDriverBegin();
         $driver = (new CreateWebDriver())->drive();
         foreach ($argvs as $step){
             self::handleStep($driver,$step);
         }
 
         CloseWebDriver::doClose($driver);
-        self::echoDriverClose();
     }
 
     private function echoList(){
@@ -106,14 +102,6 @@ class Bonwenium
             echo $value.$this->spaceStr;
         }
         die();
-    }
-
-    private function echoDriverBegin(){
-        echo "driver starting ...{$this->spaceStr}";
-    }
-
-    private function echoDriverClose(){
-        echo "driver closed .{$this->spaceStr}";
     }
 
     private function getList(){
@@ -138,7 +126,6 @@ class Bonwenium
     }
 
     private function handleStep($driver,$stepName){
-        echo "steping  {$stepName} ...{$this->spaceStr}";
         (new Controller($driver))->handle($stepName);
     }
 

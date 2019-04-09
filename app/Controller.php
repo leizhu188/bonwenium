@@ -252,21 +252,63 @@ class Controller
         }
     }
 
+    /*
+     * 等待元素 出现 | 消失
+     */
     protected function doUntil($until){
+        usleep(config('app.until_ready',0));
+
         if (empty($until)){
             return;
         }
         $aSteps = self::stepStrToArr($until);
-        switch ($aSteps[count($aSteps)-1]['str']) {
-            case 'appear':
-                self::until_appear($aSteps[count($aSteps)-2]['str']);
-                break;
-            case 'disappear':
-                self::until_disappear($aSteps[count($aSteps)-2]['str']);
-                break;
-        }
+        $beginTime = time();
 
-        self::saveLog('until','ok',$until,'','');
+        $isContinue = true;
+        do{
+            $actionElement = $this->driver;
+            foreach ($aSteps as $k=>$aStep) {
+                if (!is_array($actionElement)) {
+                    $actionElement = [$actionElement];
+                }
+
+                switch ($aStep['do']) {
+                    case '>'    :
+                        try{
+                            $actionElement = self::analysisElements_property($actionElement, $aStep['str']);
+                        }catch (\Exception $e){
+                            $actionElement = [];
+                        }
+                        break;
+                    case '>>'   :
+                        try{
+                            $actionElement = self::analysisElements_next($actionElement, $aStep['str']);
+                        }catch (\Exception $e){
+                            $actionElement = [];
+                        }
+                        break;
+                    case '>>>'  :
+                        switch ($aStep['str']) {
+                            case 'appear':
+                                if (count($actionElement) > 0){
+                                    $isContinue = false;
+                                }
+                                break;
+                            case 'disappear':
+                                if (count($actionElement) == 0){
+                                    $isContinue = false;
+                                }
+                                break;
+                        }
+                        break;
+                }
+            }
+        }while($isContinue && (time()-$beginTime < config('app.until_timeout')));
+        if ($isContinue){
+            self::saveLog('until','no',$until,$aStep['str'],'timeout');
+        }else{
+            self::saveLog('until','ok',$until,$aStep['str'],(time()-$beginTime).'s');
+        }
     }
 
     /*
@@ -300,55 +342,6 @@ class Controller
 
         self::saveLog('check_msg','no',$rightMessage,$rightMessage,$message);
         return false;
-    }
-
-    public function until_appear($elementStr = 'tag:div'){
-        sleep(config('app.until_appear_ready'));
-        $elementArr = explode(':',$elementStr);
-        $by = null;
-        switch ($elementArr[0]){
-            case 'tag' :
-                $by = WebDriverBy::tagName($elementArr[1]);break;
-            case 'class' :
-                $by = WebDriverBy::className($elementArr[1]);break;
-            case 'id' :
-                $by = WebDriverBy::id($elementArr[1]);break;
-        }
-
-        try{
-            $this->driver->wait(config('app.until_appear_timeout'))->until(
-                WebDriverExpectedCondition::visibilityOfElementLocated(
-                    $by
-                )
-            );
-        }catch (TimeOutException $e){
-            self::saveLog('until','no',$elementStr,'appear','disappear');
-            return true;
-        }
-    }
-
-    public function until_disappear($elementStr = 'tag:div'){
-        sleep(config('app.until_disappear_ready'));
-        $elementArr = explode(':',$elementStr);
-        $by = null;
-        switch ($elementArr[0]){
-            case 'tag' :
-                $by = WebDriverBy::tagName($elementArr[1]);break;
-            case 'class' :
-                $by = WebDriverBy::className($elementArr[1]);break;
-            case 'id' :
-                $by = WebDriverBy::id($elementArr[1]);break;
-        }
-        try{
-            $this->driver->wait(config('app.until_disappear_timeout'))->until(
-                WebDriverExpectedCondition::invisibilityOfElementLocated(
-                    $by
-                )
-            );
-        }catch (TimeOutException $e){
-            self::saveLog('until','no',$elementStr,'disappear','appear');
-            return true;
-        }
     }
 
     public function saveLog($stepType,$status,$stepStr,$expect,$result){
