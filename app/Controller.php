@@ -256,7 +256,7 @@ class Controller
      * 等待元素 出现 | 消失
      */
     protected function doUntil($until){
-        usleep(config('app.until_ready',0));
+        usleep(env('until_ready',0));
 
         if (empty($until)){
             return;
@@ -303,7 +303,7 @@ class Controller
                         break;
                 }
             }
-        }while($isContinue && (time()-$beginTime < config('app.until_timeout')));
+        }while($isContinue && (time()-$beginTime < env('until_timeout')));
         if ($isContinue){
             self::saveLog('until','no',$until,$aStep['str'],'timeout');
         }else{
@@ -345,7 +345,7 @@ class Controller
     }
 
     public function saveLog($stepType,$status,$stepStr,$expect,$result){
-        switch (config('app.log_output')){
+        switch (env('log_output')){
             case 'log_file' :
                 monolog(
                     str_pad($stepType,10," ")

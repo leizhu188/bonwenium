@@ -15,7 +15,7 @@ class Drive
 
     public function handle()
     {
-        $enterUrl = config('app.index_url');
+        $enterUrl = env('index_url');
 
         $stepDriver = $this->driver->get($enterUrl);
 

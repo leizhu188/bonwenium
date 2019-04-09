@@ -2,3 +2,4 @@ vendor
 storage
 composer.lock
 .idea
+.env
