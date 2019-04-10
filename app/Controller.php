@@ -2,10 +2,8 @@
 
 namespace App;
 
-use Bonwe\WebDriver\Exception\TimeOutException;
 use Bonwe\WebDriver\Remote\RemoteWebDriver;
 use Bonwe\WebDriver\WebDriverBy;
-use Bonwe\WebDriver\WebDriverExpectedCondition;
 
 class Controller
 {
@@ -51,6 +49,8 @@ class Controller
                         sleep((int)$value);break;
                     case 'usleep':
                         usleep($value);break;
+                    case 'scroll':
+                        self::doScroll($value);break;
                     case 'must_step':
                         self::doStep($value,'must');break;
                     case 'should_step':
@@ -111,7 +111,21 @@ class Controller
                             case 'append':
                                 $actionElement[0]->sendKeys($aStepDo[1]);break;
                             case 'click':
-                                $actionElement[0]->click();break;
+                                if (isset($aStepDo[1])){
+                                    switch ($aStepDo[1]){
+                                        case 'move':
+                                            $this->driver->getMouse()->mouseMove($actionElement[0]->getCoordinates());
+                                            break;
+                                        case 'down':
+                                            $this->driver->getMouse()->mouseDown($actionElement[0]->getCoordinates());
+                                            break;
+                                        case 'up':
+                                            $this->driver->getMouse()->mouseUp($actionElement[0]->getCoordinates());
+                                            break;
+                                    }
+                                }else{
+                                    $actionElement[0]->click();break;
+                                }
                         }
                         break;
                 }
@@ -253,6 +267,13 @@ class Controller
     }
 
     /*
+     * 移动滚动条
+     */
+    protected function doScroll($scroll){
+        $this->driver->executeScript("window.scrollTo({$scroll});",[]);
+    }
+
+    /*
      * 等待元素 出现 | 消失
      */
     protected function doUntil($until){
@@ -356,7 +377,7 @@ class Controller
                 );
                 break;
             case 'mysql':
-            break;
+                break;
         }
     }
 }

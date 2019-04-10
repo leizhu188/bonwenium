@@ -45,6 +45,8 @@ sleep：停顿（秒）。<br>
 `例 "sleep" => 2`<br><br>
 usleep：停顿（微秒）。<br>
 `例 "usleep" => 500000`<br><br>
+scroll：滚动到指定位置<br>
+`例 "scroll" => "0,0"`<br><br>
 until：当某element出现/消失后。<br>
 `例 "until" => "tag:input>text:验证码>>>appear"`<br>
 `例 "until" => "tag:button>text:重试>>>disappear"`<br><br>
