@@ -16,10 +16,10 @@ class CreateWebDriver{
 
     public function __construct()
     {
-        $host           = config('web_driver.host');
-        $timeOut        = config('web_driver.timeout');
-        $desiredType    = config('web_driver.desired_type');
-        switch ($desiredType){
+        $browser = env('browser','chrome');
+        $host           = config("web_driver.{$browser}.host");
+        $timeOut        = config("web_driver.{$browser}.timeout");
+        switch ($browser){
             case 'safari' :
                 $capabilities = DesiredCapabilities::safari();
                 break;
