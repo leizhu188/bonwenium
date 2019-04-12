@@ -14,4 +14,8 @@ return[
         'host' => 'http://localhost:4444/wd/hub',
         'timeout' => 3000,
     ],
+    'firefox'=>[
+        'host' => 'http://localhost:4444/wd/hub',
+        'timeout' => 3000,
+    ],
 ];

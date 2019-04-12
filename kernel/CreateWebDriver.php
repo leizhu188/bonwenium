@@ -19,14 +19,7 @@ class CreateWebDriver{
         $browser = env('browser','chrome');
         $host           = config("web_driver.{$browser}.host");
         $timeOut        = config("web_driver.{$browser}.timeout");
-        switch ($browser){
-            case 'safari' :
-                $capabilities = DesiredCapabilities::safari();
-                break;
-            case 'chrome' :
-                $capabilities = DesiredCapabilities::chrome();
-                break;
-        }
+        $capabilities = DesiredCapabilities::$browser();
 
         $this->driver = RemoteWebDriver::create($host, $capabilities, $timeOut);
     }
