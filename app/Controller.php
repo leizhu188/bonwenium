@@ -35,36 +35,47 @@ class Controller
     {
         $steps = [];
         foreach (step($stepName) as $module){
-            $steps = array_merge($steps,$module);
+            $steps []= $module;
         }
 
         self::handleSteps($steps);
     }
 
+    /*
+     * 支持无限层级混级 数组遍历 步骤执行
+     */
     public function handleSteps($steps){
-        foreach ($steps as $step){
-            foreach ($step as $type=>$value){
-                switch ($type){
-                    case 'sleep':
-                        sleep((int)$value);break;
-                    case 'usleep':
-                        usleep($value);break;
-                    case 'scroll':
-                        self::doScroll($value);break;
-                    case 'must_step':
-                        self::doStep($value,'must');break;
-                    case 'should_step':
-                        self::doStep($value,'should');break;
-                    case 'until':
-                        self::doUntil($value);break;
-                    case 'asserts':
-                        self::doAsserts($value);break;
-                    case 'check_msg':
-                        self::checkError($value);break;
-                    case 'function':
-                        self::doFunction($value);break;
-                }
+        if (!is_array($steps)){
+            return;
+        }
+        if (!isset($steps['type'])){
+            foreach ($steps as $step){
+                self::handleSteps($step);
             }
+            return;
+        }
+
+        switch ($steps['type']){
+            case 'sleep':
+                sleep((int)$steps['value']);break;
+            case 'usleep':
+                usleep((int)$steps['value']);break;
+            case 'scroll':
+                self::doScroll($steps['value']);break;
+            case 'step':
+                self::doStep($steps);break;
+            case 'until':
+                self::doUntil([$steps]);break;
+            case 'untils':
+                self::doUntil($steps['list']);break;
+            case 'assert':
+                self::doAsserts([$steps]);break;
+            case 'asserts':
+                self::doAsserts($steps['list']);break;
+            case 'check_msg':
+                self::checkError($steps);break;
+            case 'function':
+                self::doFunction($steps['value']);break;
         }
     }
 
@@ -84,84 +95,136 @@ class Controller
         $a->$method();
     }
 
-    protected function doStep($step,$level = 'must'){
-        $aSteps = self::stepStrToArr($step);
+    const PATH_TYPE = ['bw-path','x-path'];
+    /*
+     * 根据字符串（bw-path/x-path）获取元素对象
+     */
+    protected function getElementByStr($str){
+        if (count($arr = explode(':',$str)) < 2 || !in_array($arr[0],self::PATH_TYPE)){
+            return null;
+        }
 
+        $path = substr($str,strlen($arr[0])+1);
+
+        $func_name = 'getElementByStr_'.explode('-',$arr[0])[0];
+        return self::$func_name($path);
+    }
+
+    protected function getElementByStr_bw($path){
+        if (empty($path)){
+            return [];
+        }
+
+        $aSteps = self::stepStrToArr($path);
         $actionElement = $this->driver;
-        try{
-
-            foreach ($aSteps as $k=>$aStep){
-                if (!is_array($actionElement)){
-                    $actionElement = [$actionElement];
-                }
-
-                switch ($aStep['do']){
-                    case '>'    : $actionElement = self::analysisElements_property($actionElement,$aStep['str']);break;
-                    case '>>'   : $actionElement = self::analysisElements_next($actionElement,$aStep['str']);break;
-                    case '>>>'  :
-                        if ($level == 'should' && count($actionElement) == 0){
-                            break;
-                        }
-                        $aStepDo = explode(':',$aStep['str']);
-
-                        switch ($aStepDo[0]){
-                            case 'write':
-                                $actionElement[0]->clear();
-                                $actionElement[0]->sendKeys($aStepDo[1]);break;
-                            case 'append':
-                                $actionElement[0]->sendKeys($aStepDo[1]);break;
-                            case 'click':
-                                if (isset($aStepDo[1])){
-                                    switch ($aStepDo[1]){
-                                        case 'move':
-                                            $this->driver->getMouse()->mouseMove($actionElement[0]->getCoordinates());
-                                            break;
-                                        case 'down':
-                                            $this->driver->getMouse()->mouseDown($actionElement[0]->getCoordinates());
-                                            break;
-                                        case 'up':
-                                            $this->driver->getMouse()->mouseUp($actionElement[0]->getCoordinates());
-                                            break;
-                                    }
-                                }else{
-                                    $actionElement[0]->click();break;
-                                }
-                        }
-                        break;
-                }
-
-                if (count($actionElement) == 0){
-                    self::saveLog('step','no',$step,$aStep['str'],'not found');
-                }
+        foreach ($aSteps as $k=>$aStep) {
+            if (!is_array($actionElement)) {
+                $actionElement = [$actionElement];
             }
+            switch ($aStep['do']) {
+                case '>'    :
+                    try{
+                        $actionElement = self::analysisElements_property($actionElement, $aStep['str']);
+                    }catch (\Exception $e){
+                        $actionElement = [];
+                    }
+                    break;
+                case '>>'   :
+                    try{
+                        $actionElement = self::analysisElements_next($actionElement, $aStep['str']);
+                    }catch (\Exception $e){
+                        $actionElement = [];
+                    }
+                    break;
+                case '>>>'   :
+                    break;
+                default :
+                    $actionElement = [];
+            }
+        }
 
+        return $actionElement;
+    }
+
+    protected function getElementByStr_x($path){
+        if (empty($path)){
+            return [];
+        }
+
+        try{
+            return [$this->driver->findElement(WebDriverBy::xpath($path))];
         }catch (\Exception $e){
-            self::saveLog('step','no',$step,$aStep['str'],'catch exception');
-            return;
-        }catch (\Error $e){
-            self::saveLog('step','no',$step,$aStep['str'],'catch error');
+            return [];
+        }
+    }
+
+
+    protected function  doStep($step){
+        $level = $step['level'] ?? 'must';
+
+        $actionElement = self::getElementByStr($step['path']);
+
+        if ($level == 'should' && count($actionElement) == 0){
             return;
         }
-        self::saveLog('step','ok',$step,'','');
+
+        try{
+            $aStepDo = explode(':',$step['value']);
+            switch ($aStepDo[0]){
+                case 'write':
+                    $actionElement[0]->clear();
+                    $actionElement[0]->sendKeys($aStepDo[1]);break;
+                case 'append':
+                    $actionElement[0]->sendKeys($aStepDo[1]);break;
+                case 'click':
+                    if (isset($aStepDo[1])){
+                        switch ($aStepDo[1]){
+                            case 'move':
+                                $this->driver->getMouse()->mouseMove($actionElement[0]->getCoordinates());
+                                break;
+                            case 'down':
+                                $this->driver->getMouse()->mouseDown($actionElement[0]->getCoordinates());
+                                break;
+                            case 'up':
+                                $this->driver->getMouse()->mouseUp($actionElement[0]->getCoordinates());
+                                break;
+                        }
+                    }else{
+                        $actionElement[0]->click();break;
+                    }
+            }
+        }catch (\Exception $e){
+            self::saveLog($step['type'],'no',$step['path'],$step['value'],'catch exception');
+            return;
+        }catch (\Error $e){
+            self::saveLog('step','no',$step['path'],$step['value'],'catch error');
+            return;
+        }
+        self::saveLog('step','ok',$step['path'],$step['value'],'');
     }
 
     protected function stepStrToArr($step){
-        $str = "";
         $aSteps = [];
-        $aActionType = '>>';
-        for ($i = 0; $i < strlen($step) ; $i++ ){
-            if (isset($step[$i-1]) && $step[$i-1] != '>' && $step[$i] == '>'){
-                $aSteps []= ['do'=>$aActionType,'str'=>$str];
-                $aActionType = '';
-                $str = "";
+        while ($step){
+            $aActionType = "";
+            while ($step[0] == '>'){
+                $aActionType .= '>';
+                $step = substr($step,1);
+                if (!$step){
+                    break;
+                }
             }
-            if ($step[$i] != '>'){
-                $str .= $step[$i];
-                continue;
+            $str = "";
+            while ($step[0] != '>'){
+                $str .= $step[0];
+                $step = substr($step,1);
+                if (!$step){
+                    break;
+                }
             }
-            $aActionType .= '>';
+            $aSteps []= ['do'=>$aActionType,'str'=>$str];
         }
-        $aSteps []= ['do'=>$aActionType,'str'=>$str];
+
         return $aSteps;
     }
 
@@ -220,49 +283,28 @@ class Controller
 
     protected function doAsserts($asserts){
         foreach ($asserts as $assert){
-            if (empty($assert)){
-                continue;
-            }
-            $aSteps = self::stepStrToArr($assert);
-            $actionElement = $this->driver;
-            try{
-                foreach ($aSteps as $k=>$aStep) {
-                    if (!is_array($actionElement)) {
-                        $actionElement = [$actionElement];
-                    }
-
-                    switch ($aStep['do']) {
-                        case '>'    :
-                            $actionElement = self::analysisElements_property($actionElement, $aStep['str']);
-                            break;
-                        case '>>'   :
-                            $actionElement = self::analysisElements_next($actionElement, $aStep['str']);
-                            break;
-                        case '>>>'  :
-                            switch ($aStep['str']) {
-                                case 'exist':
-                                    if (count($actionElement) == 0){
-                                        throw new \Exception('exist');
-                                    }
-                                    break;
-                                case 'no_exist':
-                                    if (count($actionElement) > 0){
-                                        throw new \Exception('no_exist');
-                                    }
-                                    break;
-                            }
-                            break;
-                    }
+            try {
+                $actionElement = self::getElementByStr($assert['path']);
+                switch ($assert['value']) {
+                    case 'exist':
+                        if (count($actionElement) == 0) {
+                            throw new \Exception('exist');
+                        }
+                        break;
+                    case 'no_exist':
+                        if (count($actionElement) > 0) {
+                            throw new \Exception('no_exist');
+                        }
+                        break;
                 }
-            }catch (\Exception $e){
-                self::saveLog('assert','no',$assert,$e->getMessage(),'throw exception');
+            } catch (\Exception $e) {
+                self::saveLog('assert', 'no', $assert['path'], $e->getMessage(), 'throw exception');
                 continue;
-            }catch (\Error $e){
-                self::saveLog('assert','no',$assert,$e->getMessage(),'throw wrong');
+            } catch (\Error $e) {
+                self::saveLog('assert', 'no', $assert['path'], $e->getMessage(), 'throw wrong');
                 continue;
             }
-
-            self::saveLog('assert','ok',$assert,'','');
+            self::saveLog('assert','ok',$assert['path'],$assert['value'],'');
         }
     }
 
@@ -276,60 +318,37 @@ class Controller
     /*
      * 等待元素 出现 | 消失
      */
-    protected function doUntil($until){
+    protected function doUntil($untils){
         usleep(env('until_ready',0));
 
-        if (empty($until)){
-            return;
-        }
-        $aSteps = self::stepStrToArr($until);
-        $beginTime = time();
+        foreach ($untils as $until){
+            $beginTime = time();
+            $isContinue = true;
+            do{
+                $actionElement = self::getElementByStr($until['path']);
 
-        $isContinue = true;
-        do{
-            $actionElement = $this->driver;
-            foreach ($aSteps as $k=>$aStep) {
-                if (!is_array($actionElement)) {
-                    $actionElement = [$actionElement];
-                }
-
-                switch ($aStep['do']) {
-                    case '>'    :
-                        try{
-                            $actionElement = self::analysisElements_property($actionElement, $aStep['str']);
-                        }catch (\Exception $e){
-                            $actionElement = [];
+                switch ($until['value']) {
+                    case 'appear':
+                        if (count($actionElement) > 0){
+                            $isContinue = false;
                         }
                         break;
-                    case '>>'   :
-                        try{
-                            $actionElement = self::analysisElements_next($actionElement, $aStep['str']);
-                        }catch (\Exception $e){
-                            $actionElement = [];
-                        }
-                        break;
-                    case '>>>'  :
-                        switch ($aStep['str']) {
-                            case 'appear':
-                                if (count($actionElement) > 0){
-                                    $isContinue = false;
-                                }
-                                break;
-                            case 'disappear':
-                                if (count($actionElement) == 0){
-                                    $isContinue = false;
-                                }
-                                break;
+                    case 'disappear':
+                        if (count($actionElement) == 0){
+                            $isContinue = false;
                         }
                         break;
                 }
+
+                usleep(100000);
+            }while($isContinue && (time()-$beginTime < env('until_timeout')));
+            if ($isContinue){
+                self::saveLog('until','no',$until['path'],$until['value'],'timeout');
+            }else{
+                self::saveLog('until','ok',$until['path'],$until['value'],(time()-$beginTime).'s');
             }
-        }while($isContinue && (time()-$beginTime < env('until_timeout')));
-        if ($isContinue){
-            self::saveLog('until','no',$until,$aStep['str'],'timeout');
-        }else{
-            self::saveLog('until','ok',$until,$aStep['str'],(time()-$beginTime).'s');
         }
+
     }
 
     /*

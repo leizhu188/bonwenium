@@ -10,16 +10,15 @@
  */
 return[
     [
-        'must_step'=>"id:kw>>>write:bonwenium",
+        'type'=>'step',
+        'path'=>'x-path://*[@id="s_tab"]/div/a[9]',
+        'value'=>'click',
+        'level'=>'must',
     ],
     [
-        'must_step'=>'id:su>>>click',
-        'until'=>'id:su>>>appear',
-        'asserts'=>[
-            'tag:a>text:图片>>>exist',
-            'tag:a>text:影音>>>exist',
-            'tag:a>text:包子>>>no_exist',
-            'tag:a>text:地图>>>no_exist'
-        ]
-    ]
+        'type'=>'step',
+        'path'=>'x-path://*[@id="s_fm"]/a/img',
+        'value'=>'click',
+        'level'=>'must',
+    ],
 ];

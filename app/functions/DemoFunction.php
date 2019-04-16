@@ -18,7 +18,7 @@ class DemoFunction extends BaseFunction
      * 继承自入口Controller。自定义方法满足非常规操作
      */
     public function demo(){
-//        $this->driver->findElement(WebDriverBy::id('su'))->click();
+        dd($this->datas);
     }
 
 }

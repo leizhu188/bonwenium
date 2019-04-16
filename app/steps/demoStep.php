@@ -4,16 +4,19 @@
  * 一次测试流程的分发口
  */
 return [
-    app('actions.demoAction.demo'),
+    //输入搜索内容 -> 搜索
     app('scenarios.demoScenario.demo'),
+    //点击 更多 -> 返回首页
+    app('actions.demoAction.demo'),
+    //点击新闻
     [
-        [
-            'should_step'=>'tag:a>text:资讯>>>click',
-            'sleep'=>2,
-            'must_step'=>'tag:a>text:网页>>>click'
-        ]
+        'type'=>'step',
+        'path'=>'x-path://*[@id="u1"]/a[1]',
+        'value'=>'click',
     ],
+    //unction 自定义操作
     [
-        ['function'=>'DemoFunction@demo']
+        'type'=>'function',
+        'value'=>'DemoFunction@demo@{"id":1,"name":"bonwe"}',
     ],
 ];
