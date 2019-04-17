@@ -14,6 +14,6 @@ if (!function_exists('env')) {
             return $return[$key];
         }
 
-        return false;
+        return $default;
     }
 }
