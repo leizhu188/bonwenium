@@ -3,6 +3,7 @@ namespace Kernel;
 use Bonwe\WebDriver\Chrome\ChromeOptions;
 use Bonwe\WebDriver\Remote\DesiredCapabilities;
 use Bonwe\WebDriver\Remote\RemoteWebDriver;
+use Bonwe\WebDriver\Remote\WebDriverCapabilityType;
 
 /**
  * Created by PhpStorm.
@@ -30,12 +31,27 @@ class CreateWebDriver{
             $capabilities->setCapability(ChromeOptions::CAPABILITY, $options);
         }
 
+        //使用代理ip
+        if (env('PROXY_IP_RANDOM',false)){
+            $ip = self::randomProxyIp();
+            $capabilities->setCapability(WebDriverCapabilityType::PROXY,[
+                'proxyType' => 'manual',
+                'httpProxy' => $ip,
+                'sslProxy' => $ip
+            ]);
+        }
+
         $this->driver = RemoteWebDriver::create($host, $capabilities, $timeOut);
     }
 
     private function randomUserAgent(){
         $num = random_int(0,count($userAgents = config('setting.userAgents'))-1);
         return $userAgents[$num];
+    }
+
+    private function randomProxyIp(){
+        $num = random_int(0,count($ips = config('setting.proxy_ips'))-1);
+        return $ips[$num];
     }
 
     /**
