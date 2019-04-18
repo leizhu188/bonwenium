@@ -4,12 +4,14 @@ namespace App;
 
 use Bonwe\WebDriver\Remote\RemoteWebDriver;
 use Bonwe\WebDriver\WebDriverBy;
+use Kernel\Mysql;
 use Predis\Client;
 
 class Controller
 {
     public $driver;
     private $redis;
+    private $mysql;
     public function __construct(RemoteWebDriver $driver)
     {
         $this->driver = $driver;
@@ -24,6 +26,13 @@ class Controller
             ]);
         }
         return $this->redis;
+    }
+
+    public function mysql(){
+        if (!$this->mysql){
+            $this->mysql = new Mysql();
+        }
+        return $this->mysql;
     }
 
     /**
@@ -139,6 +148,7 @@ class Controller
                     try{
                         $actionElement = self::analysisElements_property($actionElement, $aStep['str']);
                     }catch (\Exception $e){
+                        monolog($e->getMessage(),'bonwenium.log');
                         $actionElement = [];
                     }
                     break;
@@ -146,6 +156,7 @@ class Controller
                     try{
                         $actionElement = self::analysisElements_next($actionElement, $aStep['str']);
                     }catch (\Exception $e){
+                        monolog($e->getMessage(),'bonwenium.log');
                         $actionElement = [];
                     }
                     break;
@@ -167,6 +178,7 @@ class Controller
         try{
             return [$this->driver->findElement(WebDriverBy::xpath($path))];
         }catch (\Exception $e){
+            monolog($e->getMessage(),'bonwenium.log');
             return [];
         }
     }
@@ -207,9 +219,11 @@ class Controller
                     }
             }
         }catch (\Exception $e){
+            monolog($e->getMessage(),'bonwenium.log');
             self::saveLog($step['type'],'no',$step['path'],$step['value'],'catch exception');
             return;
         }catch (\Error $e){
+            monolog($e->getMessage(),'bonwenium.log');
             self::saveLog('step','no',$step['path'],$step['value'],'catch error');
             return;
         }
@@ -311,9 +325,11 @@ class Controller
                         break;
                 }
             } catch (\Exception $e) {
+                monolog($e->getMessage(),'bonwenium.log');
                 self::saveLog('assert', 'no', $assert['path'], $e->getMessage(), 'throw exception');
                 continue;
             } catch (\Error $e) {
+                monolog($e->getMessage(),'bonwenium.log');
                 self::saveLog('assert', 'no', $assert['path'], $e->getMessage(), 'throw wrong');
                 continue;
             }
@@ -371,6 +387,7 @@ class Controller
         try{
             $messageElement = $this->driver->findElement(WebDriverBy::className('el-message'));
         }catch (\Exception $e){
+            monolog($e->getMessage(),'bonwenium.log');
             if (empty($rightMessage)){
                 self::saveLog('check_msg','ok',$rightMessage,'','');
                 return true;
