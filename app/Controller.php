@@ -4,13 +4,26 @@ namespace App;
 
 use Bonwe\WebDriver\Remote\RemoteWebDriver;
 use Bonwe\WebDriver\WebDriverBy;
+use Predis\Client;
 
 class Controller
 {
     public $driver;
+    private $redis;
     public function __construct(RemoteWebDriver $driver)
     {
         $this->driver = $driver;
+    }
+
+    public function redis(){
+        if (!$this->redis){
+            $this->redis = new Client([
+                'scheme' => 'tcp',
+                'host'   => env('REDIS_HOST','127.0.0.1'),
+                'port'   => env('REDIS_PORT',6379),
+            ]);
+        }
+        return $this->redis;
     }
 
     /**

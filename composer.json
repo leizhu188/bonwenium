@@ -11,7 +11,8 @@
     "require": {
         "bonwe/webdriver": "v1.0.1",
         "monolog/monolog": "^1.24",
-        "symfony/var-dumper": "^4.2"
+        "symfony/var-dumper": "^4.2",
+        "predis/predis": "^1.1"
     },
     "autoload": {
         "psr-4": {
