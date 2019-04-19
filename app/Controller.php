@@ -87,9 +87,9 @@ class Controller
             case 'step':
                 self::doStep($steps);break;
             case 'until':
-                self::doUntil([$steps]);break;
+                self::doUntils([$steps]);break;
             case 'untils':
-                self::doUntil($steps['list']);break;
+                self::doUntils($steps['list']);break;
             case 'assert':
                 self::doAsserts([$steps]);break;
             case 'asserts':
@@ -193,41 +193,51 @@ class Controller
             return;
         }
 
-        try{
-            $aStepDo = explode(':',$step['value']);
-            switch ($aStepDo[0]){
-                case 'write':
-                    $actionElement[0]->clear();
-                    $actionElement[0]->sendKeys($aStepDo[1]);break;
-                case 'append':
-                    $actionElement[0]->sendKeys($aStepDo[1]);break;
-                case 'click':
-                    if (isset($aStepDo[1])){
-                        switch ($aStepDo[1]){
-                            case 'move':
-                                $this->driver->getMouse()->mouseMove($actionElement[0]->getCoordinates());
-                                break;
-                            case 'down':
-                                $this->driver->getMouse()->mouseDown($actionElement[0]->getCoordinates());
-                                break;
-                            case 'up':
-                                $this->driver->getMouse()->mouseUp($actionElement[0]->getCoordinates());
-                                break;
+        $repeatCount = 0;
+        do{
+            try{
+                $aStepDo = explode(':',$step['value']);
+                switch ($aStepDo[0]){
+                    case 'write':
+                        $actionElement[0]->clear();
+                        $actionElement[0]->sendKeys($aStepDo[1]);break;
+                    case 'append':
+                        $actionElement[0]->sendKeys($aStepDo[1]);break;
+                    case 'click':
+                        if (isset($aStepDo[1])){
+                            switch ($aStepDo[1]){
+                                case 'move':
+                                    $this->driver->getMouse()->mouseMove($actionElement[0]->getCoordinates());
+                                    break;
+                                case 'down':
+                                    $this->driver->getMouse()->mouseDown($actionElement[0]->getCoordinates());
+                                    break;
+                                case 'up':
+                                    $this->driver->getMouse()->mouseUp($actionElement[0]->getCoordinates());
+                                    break;
+                            }
+                        }else{
+                            $actionElement[0]->click();break;
                         }
-                    }else{
-                        $actionElement[0]->click();break;
-                    }
+                }
+                $repeatCount = config('app.step_repeat_times');
+            }catch (\Exception $e){
+                ++$repeatCount;
+                monolog($e->getMessage(),'bonwenium.log');
+                self::saveLog($step['type'],'no',$step['path'],$step['value'],"catch exception try {$repeatCount} times");
+                usleep(500000);
+                continue;
+            }catch (\Error $e){
+                ++$repeatCount;
+                monolog($e->getMessage(),'bonwenium.log');
+                self::saveLog('step','no',$step['path'],$step['value'],"catch error try {$repeatCount} times");
+                usleep(500000);
+                continue;
             }
-        }catch (\Exception $e){
-            monolog($e->getMessage(),'bonwenium.log');
-            self::saveLog($step['type'],'no',$step['path'],$step['value'],'catch exception');
-            return;
-        }catch (\Error $e){
-            monolog($e->getMessage(),'bonwenium.log');
-            self::saveLog('step','no',$step['path'],$step['value'],'catch error');
-            return;
-        }
-        self::saveLog('step','ok',$step['path'],$step['value'],'');
+            self::saveLog('step','ok',$step['path'],$step['value'],'');
+        }while($repeatCount < config('app.step_repeat_times'));
+
+
     }
 
     protected function stepStrToArr($step){
@@ -310,31 +320,35 @@ class Controller
 
     protected function doAsserts($asserts){
         foreach ($asserts as $assert){
-            try {
-                $actionElement = self::getElementByStr($assert['path']);
-                switch ($assert['value']) {
-                    case 'exist':
-                        if (count($actionElement) == 0) {
-                            throw new \Exception('exist');
-                        }
-                        break;
-                    case 'no_exist':
-                        if (count($actionElement) > 0) {
-                            throw new \Exception('no_exist');
-                        }
-                        break;
-                }
-            } catch (\Exception $e) {
-                monolog($e->getMessage(),'bonwenium.log');
-                self::saveLog('assert', 'no', $assert['path'], $e->getMessage(), 'throw exception');
-                continue;
-            } catch (\Error $e) {
-                monolog($e->getMessage(),'bonwenium.log');
-                self::saveLog('assert', 'no', $assert['path'], $e->getMessage(), 'throw wrong');
-                continue;
-            }
-            self::saveLog('assert','ok',$assert['path'],$assert['value'],'');
+            self::doAssert($assert);
         }
+    }
+
+    protected function doAssert($assert){
+        try {
+            $actionElement = self::getElementByStr($assert['path']);
+            switch ($assert['value']) {
+                case 'exist':
+                    if (count($actionElement) == 0) {
+                        throw new \Exception('exist');
+                    }
+                    break;
+                case 'no_exist':
+                    if (count($actionElement) > 0) {
+                        throw new \Exception('no_exist');
+                    }
+                    break;
+            }
+        } catch (\Exception $e) {
+            monolog($e->getMessage(),'bonwenium.log');
+            self::saveLog('assert', 'no', $assert['path'], $e->getMessage(), 'throw exception');
+            return;
+        } catch (\Error $e) {
+            monolog($e->getMessage(),'bonwenium.log');
+            self::saveLog('assert', 'no', $assert['path'], $e->getMessage(), 'throw wrong');
+            return;
+        }
+        self::saveLog('assert','ok',$assert['path'],$assert['value'],'');
     }
 
     /*
@@ -347,37 +361,43 @@ class Controller
     /*
      * 等待元素 出现 | 消失
      */
-    protected function doUntil($untils){
-        usleep(env('until_ready',0));
+    protected function doUntils($untils){
+        usleep(config('app.until_ready',0));
 
         foreach ($untils as $until){
-            $beginTime = time();
-            $isContinue = true;
-            do{
-                $actionElement = self::getElementByStr($until['path']);
-
-                switch ($until['value']) {
-                    case 'appear':
-                        if (count($actionElement) > 0){
-                            $isContinue = false;
-                        }
-                        break;
-                    case 'disappear':
-                        if (count($actionElement) == 0){
-                            $isContinue = false;
-                        }
-                        break;
-                }
-
-                usleep(100000);
-            }while($isContinue && (time()-$beginTime < env('until_timeout')));
-            if ($isContinue){
-                self::saveLog('until','no',$until['path'],$until['value'],'timeout');
-            }else{
-                self::saveLog('until','ok',$until['path'],$until['value'],(time()-$beginTime).'s');
-            }
+            self::doUntil($until);
         }
+    }
 
+    /*
+     * 等待元素 出现 | 消失
+     */
+    protected function doUntil($until){
+        $beginTime = time();
+        $isContinue = true;
+        do{
+            $actionElement = self::getElementByStr($until['path']);
+
+            switch ($until['value']) {
+                case 'appear':
+                    if (count($actionElement) > 0){
+                        $isContinue = false;
+                    }
+                    break;
+                case 'disappear':
+                    if (count($actionElement) == 0){
+                        $isContinue = false;
+                    }
+                    break;
+            }
+
+            usleep(100000);
+        }while($isContinue && (time()-$beginTime < config('app.until_timeout')));
+        if ($isContinue){
+            self::saveLog('until','no',$until['path'],$until['value'],'timeout');
+        }else{
+            self::saveLog('until','ok',$until['path'],$until['value'],(time()-$beginTime).'s');
+        }
     }
 
     /*
