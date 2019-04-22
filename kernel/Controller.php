@@ -1,10 +1,9 @@
 <?php
 
-namespace App;
+namespace Kernel;
 
 use Bonwe\WebDriver\Remote\RemoteWebDriver;
 use Bonwe\WebDriver\WebDriverBy;
-use Kernel\Mysql;
 use Predis\Client;
 
 class Controller

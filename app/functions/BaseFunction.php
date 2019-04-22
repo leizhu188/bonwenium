@@ -9,7 +9,7 @@
 namespace App\functions;
 
 
-use App\Controller;
+use Kernel\Controller;
 
 class BaseFunction extends Controller
 {

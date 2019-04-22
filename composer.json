@@ -24,10 +24,12 @@
             "global/env.php",
             "global/dd.php",
             "global/step.php",
+            "global/debug.php",
             "global/config.php",
             "global/monolog.php",
             "global/app_path.php",
-            "global/steps_path.php"
+            "global/steps_path.php",
+            "global/debugs_path.php"
         ]
     }
 }

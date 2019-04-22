@@ -9,8 +9,6 @@
 namespace Kernel;
 
 
-use App\Controller;
-
 class Bonwenium
 {
     private $argv = [];
@@ -53,15 +51,23 @@ class Bonwenium
         }
 
         $argvs = array_filter($this->argv);
+
+        $isDebug = false;
+        if ($argvs[0] == 'debug'){
+            $isDebug = true;
+            isset($argvs[1]) ? $argvs = [$argvs[1]] : $argvs = ["test"];
+        }
+
         foreach ($argvs as $step){
-            if (!self::checkStep($step)){
+            if (!self::checkStep($step,$isDebug)){
                 return;
             }
         }
 
-        $driver = (new CreateWebDriver())->drive();
+        $driver = new CreateWebDriver();
+        $driver = $isDebug ? $driver->getDriver() : $driver->drive();
         foreach ($argvs as $step){
-            self::handleStep($driver,$step);
+            self::handleStep($driver,$step,$isDebug);
         }
 
         CloseWebDriver::doClose($driver);
@@ -116,8 +122,8 @@ class Bonwenium
         return $return;
     }
 
-    private function checkStep($stepName){
-        $files = scandir(steps_path());
+    private function checkStep($stepName,$isDebug = false){
+        $files = scandir($isDebug ? debugs_path() : steps_path());
         if (!in_array($stepName.'.php',$files)){
             echo "command not found {$this->spaceStr}";
             return false;
@@ -125,8 +131,9 @@ class Bonwenium
         return true;
     }
 
-    private function handleStep($driver,$stepName){
-        (new Controller($driver))->handle($stepName);
+    private function handleStep($driver,$stepName,$isDebug = false){
+        $obj = $isDebug ? new Debug($driver) : new Controller($driver);
+        $obj->handle($stepName);
     }
 
 }

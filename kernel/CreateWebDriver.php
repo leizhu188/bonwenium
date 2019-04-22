@@ -1,6 +1,7 @@
 <?php
 namespace Kernel;
 use Bonwe\WebDriver\Chrome\ChromeOptions;
+use Bonwe\WebDriver\Exception\WebDriverException;
 use Bonwe\WebDriver\Remote\DesiredCapabilities;
 use Bonwe\WebDriver\Remote\RemoteWebDriver;
 use Bonwe\WebDriver\Remote\WebDriverCapabilityType;
@@ -41,7 +42,22 @@ class CreateWebDriver{
             ]);
         }
 
-        $this->driver = RemoteWebDriver::create($host, $capabilities, $timeOut);
+        //如果当前已经有打开的浏览器
+        $sessionIds = RemoteWebDriver::getAllSessions($host);
+        foreach ($sessionIds as $sessionId){
+            try{
+                $this->driver = RemoteWebDriver::createBySessionID($sessionId['id'],$host);
+                $this->driver->getTitle();
+                break;
+            }catch (WebDriverException $e){
+                $this->driver = null;
+                continue;
+            }
+        }
+
+        if (!$this->driver){
+            $this->driver = RemoteWebDriver::create($host, $capabilities, $timeOut);
+        }
     }
 
     private function randomUserAgent(){
@@ -61,6 +77,14 @@ class CreateWebDriver{
     {
         (new Drive($this->driver))->handle();
 
+        return $this->driver;
+    }
+
+    /**
+     * @return \Bonwe\WebDriver\Remote\RemoteWebDriver
+     */
+    public function getDriver()
+    {
         return $this->driver;
     }
 
