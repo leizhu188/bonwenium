@@ -32,7 +32,7 @@ class CreateWebDriver{
 
 
 
-        self::setUseragent($capabilities);
+        self::setOptions($capabilities);
 
         //使用代理ip
         self::setIpProxy($capabilities);
@@ -52,14 +52,20 @@ class CreateWebDriver{
     }
 
     /*
-     * 设置useragent
+     * 设置useragent,headless
      */
-    private function setUseragent(DesiredCapabilities $capabilities){
-        //chrome浏览器修改useragent
-        if (env('USER_AGENT_RANDOM',true) && $this->browserName == 'chrome'){
-            $useragent = self::randomUserAgent();
+    private function setOptions(DesiredCapabilities $capabilities){
+        if ($this->browserName == 'chrome'){
             $options = new ChromeOptions();
-            $options->addArguments(["user-agent={$useragent}"]);
+            //chrome浏览器修改useragent
+            if (env('USER_AGENT_RANDOM',true)){
+                $useragent = self::randomUserAgent();
+                $options->addArguments(["user-agent={$useragent}"]);
+            }
+            //chrome浏览器 headless
+            if (env('BROWSER_HEADLESS',true)){
+                $options->addArguments(["--headless"]);
+            }
             $capabilities->setCapability(ChromeOptions::CAPABILITY, $options);
         }
     }
