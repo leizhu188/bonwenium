@@ -199,9 +199,9 @@ class Controller
                 switch ($aStepDo[0]){
                     case 'write':
                         $actionElement[0]->clear();
-                        $actionElement[0]->sendKeys($aStepDo[1]);break;
+                        $actionElement[0]->sendKeys($aStepDo[1],env('browser','safari'));break;
                     case 'append':
-                        $actionElement[0]->sendKeys($aStepDo[1]);break;
+                        $actionElement[0]->sendKeys($aStepDo[1],env('browser','safari'));break;
                     case 'click':
                         if (isset($aStepDo[1])){
                             switch ($aStepDo[1]){
