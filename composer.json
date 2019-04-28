@@ -9,7 +9,7 @@
         }
     ],
     "require": {
-        "bonwe/webdriver": "v1.0.1",
+        "bonwe/webdriver": "v1.0.3",
         "monolog/monolog": "^1.24",
         "symfony/var-dumper": "^4.2",
         "predis/predis": "^1.1"
