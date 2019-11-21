@@ -37,4 +37,10 @@ class BaseFunction extends Controller
         return $ret;
     }
 
+    //将url资源下载到本地
+    protected function downFile($url,$pathName){
+        $file = file_get_contents($url);
+        file_put_contents($pathName, $file);
+    }
+
 }
