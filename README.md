@@ -1,7 +1,14 @@
 # bonwenium
 php自动化测试框架
 
-##  目录
+##  使用
+安装浏览器（推荐chrome）<br>
+下载对应浏览器的webdriver,并驱动起来。<br>
+本项目更至最新版本，composer加载所有组件。<br>
+配置.env文件<br>
+执行 php bonwenium list  可以获取demo。
+
+##  项目目录
 #### app/actions
 常规步骤组件：<br>
 例如针对个人主页测试，个人收藏测试等，都需要登录后展开，故登录等 常规操作可写于acitons。
