@@ -186,7 +186,12 @@ class Controller
     protected function  doStep($step){
         $level = $step['level'] ?? 'must';
 
-        $actionElement = self::getElementByStr($step['path']);
+        //兼容机制 当找不到元素时，等一会儿
+        $waitTimes = 0;
+        while (empty($actionElement = self::getElementByStr($step['path'])) && $waitTimes < config('app.step_timeout')){
+            sleep(1);
+            ++$waitTimes;
+        }
 
         if ($level == 'should' && count($actionElement) == 0){
             return;
